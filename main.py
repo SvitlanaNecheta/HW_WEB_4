@@ -4,7 +4,7 @@ import logging
 import json
 import socket
 from pathlib import Path
-
+from datetime import datetime
 from threading import Thread
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from jinja2 import Environment, FileSystemLoader
@@ -81,18 +81,44 @@ class GoITFramework(BaseHTTPRequestHandler):
             self.wfile.write(file.read())
 
 #****************************************
+
+
 def save_data_from_form(data):
     parse_data = urllib.parse.unquote_plus(data.decode())
     print(parse_data)
     try:
-        parse_dict = {key:value for key, value in [el.split('=') for el in parse_data.split('&')]}
-       
-        with open('data/bd.json', 'a', encoding='utf-8') as file:
-            json.dump(parse_dict, file, ensure_ascii=False, indent=4)
+        # Парсинг даних із форми
+        parse_dict = {key: value for key, value in [el.split('=') for el in parse_data.split('&')]}
+        
+        # Отримуємо поточний час як ключ
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+        
+        # Формуємо новий запис
+        new_entry = {
+            current_time: {
+                "username": parse_dict.get('username', 'Unknown'),
+                "message": parse_dict.get('message', '')
+            }
+        }
+        
+    
+        try:
+            with open('storage/data.json', 'r', encoding='utf-8') as file:
+                data = json.load(file)
+        except FileNotFoundError:
+            
+            data = {}
+
+        
+        data.update(new_entry)
+        
+        
+        with open('storage/data.json', 'w', encoding='utf-8') as file:
+            json.dump(data, file, ensure_ascii=False, indent=4)
     except ValueError as err:
-        logging.error(err)
+        logging.error(f"ValueError: {err}")
     except OSError as err:
-        logging.error(err)
+        logging.error(f"OSError: {err}")
 
 #****************************************
 def run_socket_server(host, port):

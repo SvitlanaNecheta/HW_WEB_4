@@ -19,6 +19,7 @@ def main():
         conn.send(message.encode())
     conn.close()
     server_socket.close()
-
+def save_data_from_form(data):
+  
 if __name__=='__main__':
     main() 
